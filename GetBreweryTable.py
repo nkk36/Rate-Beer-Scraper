@@ -17,7 +17,7 @@ def GetBreweryTable(links,j):
     import datetime
 
     #Get url and scrape data
-    url = links["links"][j]
+    url = links["link"][j]
     page = requests.get(url, verify = False)
     soup = BeautifulSoup(page.text, "lxml")
     #brewT = soup.find_all('table', attrs = {"id": "brewerTable"})

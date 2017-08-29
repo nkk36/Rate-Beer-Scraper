@@ -14,7 +14,7 @@ def GetBreweryBeerLinks(links,j):
     import re
 
     #Get url and scrape data
-    url = links["links"][j]
+    url = links["link"][j]
     page = requests.get(url, verify = False)
     soup = BeautifulSoup(page.text, "lxml")
     
@@ -37,6 +37,6 @@ def GetBreweryBeerLinks(links,j):
     for i in range(0,numactive,1):
         tlinks.append("https://www.ratebeer.com" + links[i] + "/")
     
-    tlinks = pd.DataFrame(tlinks, columns = ["links"])
+    tlinks = pd.DataFrame(tlinks, columns = ["link"])
     return(tlinks)
         

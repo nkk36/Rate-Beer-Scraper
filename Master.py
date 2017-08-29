@@ -32,6 +32,6 @@ for i in range(0,L,1):
 
 BreweryBeerLinks = GetBreweryBeerLinks(links, 0)
 
-df2 = GetBreweryBeerTable(BreweryBeerLinks["links"][0], 46)
+df2 = GetBreweryBeerTable(BreweryBeerLinks["link"][0], 46)
     
     
