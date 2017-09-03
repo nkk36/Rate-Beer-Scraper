@@ -1,9 +1,8 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
 """
-Created on Tue Aug 22 15:03:11 2017
+FUNCTION DESCRIPTION
 
-@author: nicholaskallfa
+Inputs: 
+Outputs: 
 """
 
 def GetBreweryTable(links,j):
@@ -31,20 +30,26 @@ def GetBreweryTable(links,j):
     numRegex = re.compile(r"\d{1,4}")
     numactive = int(numRegex.search(soup.find_all("a", href = "#active")[0].text).group())
 
-    #Initialize data frame and fill with data
-    #df = pd.DataFrame(index = range(0,numactive,1), columns = ["Brewery", "Type", "NumBeer", "MyCount", "Est"])
+    #Initialize data frame and fill with data. Drop MyCount column
     df = pd.DataFrame(np.reshape(array_df[:numactive*5],(numactive,5)), columns = ["Brewery", "Type", "NumBeer", "MyCount", "Est"])
+    df.drop("MyCount", axis = 1, inplace = True)
+
+    
+    #Split brewery name from city location and put into main dataframe
     split_brewery_city = df["Brewery"].apply(lambda x: x.split("-"))
     df_sbc = pd.DataFrame(np.concatenate(split_brewery_city, axis = 0).reshape(numactive,2), columns = ["Brewery","City"])
     df["Brewery"] = df_sbc["Brewery"]
     df.insert(1, "City", df_sbc["City"])
-    state = ["Alabama"]*numactive
+    
+    #Place state name in main dataframe
+    state = ["Alabama"]*numactive #Only for state of Alabama currently
     df_state = pd.DataFrame(state, columns = ["State"])
     df.insert(2, "State", df_state)
 
+    #Put date collected into main dataframe
     today = [datetime.date.today()]*numactive
     df_today = pd.DataFrame(today, columns = ["Date"])
-    df.drop("MyCount", axis = 1, inplace = True)
     df = pd.concat([df, df_today], axis = 1)
+
 
     return(df)

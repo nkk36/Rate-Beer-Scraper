@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Aug 24 20:11:50 2017
+FUNCTION DESCRIPTION
 
-@author: NKallfa
+Inputs: 
+Outputs: 
 """
 
 def GetBreweryBeerLinks(links,j):
@@ -22,10 +22,10 @@ def GetBreweryBeerLinks(links,j):
     numRegex = re.compile(r"\d{1,4}")
     numactive = int(numRegex.search(soup.find_all("a", href = "#active")[0].text).group())
     
+    #Get links to each brewery                                              
     BreweryLinks = soup.find_all("a", href = True)
-    
     linkRegex = re.compile(r"/brewers/([\D])+(/)([0-9])+")
-     
+    
     links = []
     for link in BreweryLinks:
         if linkRegex.search(str(link)) is not None:
@@ -33,6 +33,7 @@ def GetBreweryBeerLinks(links,j):
         else:
             pass
     
+    #Get true links
     tlinks = []
     for i in range(0,numactive,1):
         tlinks.append("https://www.ratebeer.com" + links[i] + "/")
