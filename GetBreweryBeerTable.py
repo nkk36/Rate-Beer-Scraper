@@ -63,7 +63,7 @@ def GetBreweryBeerTable(links, numbeer):
     #Place link to individual beer reviews in dataframe
     df["link"] = pd.DataFrame(tlinks)
     
-    return(delete)
+    return(df)
 
     #WORKING CODE THAT COULD BE USED
     #for i in range(0, len(df)):
