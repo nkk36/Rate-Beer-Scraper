@@ -12,66 +12,84 @@ def GetBreweryBeerTable(links, numbeer):
     from bs4 import BeautifulSoup
     import pandas as pd
     import numpy as np
-    import re
+    import datetime
+
 
     #Get url and scrape data
     url = "https://www.ratebeer.com/brewers/avondale-brewing-company/12890/"#links#["links"][j] #Only for Avondale Brewing Company temporarily
     page = requests.get(url, verify = False)
     soup = BeautifulSoup(page.text, "lxml")
     
-    #Get table in numpy array
-    array_df = []
-    for rows in soup.find_all("td"):
-        array_df.append(rows.text)
+    #Get brewery name and location
+    GetTitle = soup.find("title")
+    TitleLoc = GetTitle.text.split("|")[0].strip().split(", ")
+    BreweryName = TitleLoc[0]
+    CityName = TitleLoc[1]
+    StateName = TitleLoc[2]
     
-    #Look for "alias" on website     
-    aliasRegex = re.compile(r"(alias)")    
-    delete = []
-    L = len(array_df)
-    for i in range(0, L, 1):
-        if aliasRegex.search(array_df[i]) is not None:
-            delete.append(i)
+    #Get less opaque links    
+    OpaqueLinks = soup.find_all("tr", attrs = {"class":"less-opaque"})
+    LOpaqLinks = len(OpaqueLinks)
+    DeleteBeers = []
+    for i in range(0,LOpaqLinks):
+        if OpaqueLinks[i].find("em", attrs={"class":"small"}) is not None:
+            DeleteBeers.append(OpaqueLinks[i].find("a").text)
         else:
             pass
+    DeleteBeers = pd.DataFrame(DeleteBeers)   
     
-    #Find rows with 'alias" to delete
-    deletearray = []
-    index = 0
-    for element in delete:
-        deletearray.append(range(delete[index], element + 8,1))
-        index += 1
-    
-    #Delete rows with "alias" and get number of active beers    
-    array_df = np.delete(array_df, deletearray)
-    numactive = numbeer - len(delete)
-    
-    #Fill dataframe
-    df = pd.DataFrame(np.reshape(array_df[:numactive*7],(numactive,7)), columns = ["Beer", "ABV", "DateAdded", "Rate", "Score", "Style", "NumRating"])
-    df["type"] = df["Beer"].apply(lambda x: x.split("%")[1] if "%" in x else x.split(" ")[len(x.split(" ")) - 1])
-    
-    #Search for links to reviews for each beer
-    link_regex = re.compile(r"(/beer/)(.+)(/\d{1,6}/)")
-    links = soup.find_all("a", href = True)
-    
-    tlinks = []
-    for link in links:
-        if link_regex.search(str(link)) is not None and "rate" != link_regex.search(str(link)).group(2):
-            tlinks.append("https://www.ratebeer.com"+link_regex.search(str(link)).group())
-        else:
+    #Get list of all active beer names, type, ABV, date added, and links to their reviews
+    BeerList = soup.find_all("td", attrs = {"width":"50%"})
+    DateAdd = soup.find_all("td", attrs = {"class":"real-small"})
+    LBeerList = len(BeerList)
+    BeerName = []
+    BeerType = []
+    BeerABV = []
+    DateAdded = []
+    Links = []
+    for i in range(0,LBeerList):
+        BName = BeerList[i].find("a").text
+        TF = DeleteBeers.apply(lambda x: x == BName).sum(axis = 0)[0]
+        if TF == 1:
             pass
-        
-    #Place link to individual beer reviews in dataframe
-    df["link"] = pd.DataFrame(tlinks)
+        else:
+            BeerName.append(BeerList[i].find("a").text)
+            BeerType.append(BeerList[i].find("span").text)
+            BeerABV.append(BeerList[i].find("div").text[0:4])
+            DateAdded.append(DateAdd[i].text)
+            Links.append("https://www.ratebeer.com"+BeerList[i].find("a")["href"])
     
-    return(df)
-
-    #WORKING CODE THAT COULD BE USED
-    #for i in range(0, len(df)):
-     #   df["rname"][i] = df["Beer"][i].split(df["type"][i])[0]
+    #Get list of beer average score, style, and number of ratings
+    ScoreNumRating = soup.find_all(lambda tag: tag.name == 'td' and 
+                                   tag.get('class') == ['text-left'])
+    StyleHTML = soup.find_all("td", attrs = {"class":"small", "align":"center"})  
+    ScoreHTML = ScoreNumRating[0:len(ScoreNumRating):2]
+    NumRatingHTML = ScoreNumRating[1:len(ScoreNumRating):2]
+    Score = []
+    Style = []
+    NumRating = []
+    L = len(StyleHTML)
+    for i in range(0,L):
+        Score.append(ScoreHTML[i].text)
+        Style.append(StyleHTML[i].text)
+        NumRating.append(NumRatingHTML[i].text)
     
-    #Gets ABV 
-    #abv_regex = re.compile(r"\d+(\.{0,1}\d{0,2})(\%)")
-    #df["abv"] = df["Beer"].apply(lambda x: abv_regex.search(x).group() if abv_regex.search(x) is not None else "NA")
+    #Get number of active beers
+    numactive = len(BeerName)
     
-    #Gets type of beer
-    #soup.find_all("span", attrs = {"class" : "real-small hidden-xs"}        
+    #Fill data frame
+    df = pd.DataFrame(np.reshape([0]*numactive*12,(numactive,12)), columns = ["Beer", "Type" ,"ABV", "DateAdded", "Score", "Style", "NumRating", "Brewery", "City", "State", "Link","DateCollected"])
+    df["Beer"] = pd.DataFrame(BeerName)
+    df["Type"] = pd.DataFrame(BeerType)
+    df["ABV"] = pd.DataFrame(BeerABV)
+    df["DateAdded"] = pd.DataFrame(DateAdded)
+    df["Score"] = pd.DataFrame(Score)
+    df["Style"] = pd.DataFrame(Style)
+    df["NumRating"] = pd.DataFrame(NumRating)
+    df["Brewery"] = pd.DataFrame([BreweryName]*len(df))
+    df["City"] = pd.DataFrame([CityName]*len(df))
+    df["State"] = pd.DataFrame([StateName]*len(df))
+    df["Link"] = pd.DataFrame(Links)
+    df["DateCollected"] = pd.DataFrame([datetime.date.today()]*numactive)
+    
+    return(df)       
