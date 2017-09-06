@@ -62,3 +62,5 @@ def GetBreweryTable(links,j):
     df["DateCollected"] = pd.DataFrame([datetime.date.today()]*numactive)
 
     return(df)
+
+#soup.find_all("div", attrs = {"style":"margin:20px 0 0 20px;"})
