@@ -5,7 +5,7 @@ Inputs:
 Outputs: 
 """
 
-def GetBreweryBeerTable(links, numbeer):
+def GetBreweryBeerTable(link):
     
     #Import packages
     import requests
@@ -13,10 +13,11 @@ def GetBreweryBeerTable(links, numbeer):
     import pandas as pd
     import numpy as np
     import datetime
+    import re
 
 
     #Get url and scrape data
-    url = "https://www.ratebeer.com/brewers/avondale-brewing-company/12890/"#links#["links"][j] #Only for Avondale Brewing Company temporarily
+    url = link
     page = requests.get(url, verify = False)
     soup = BeautifulSoup(page.text, "lxml")
     
@@ -45,13 +46,25 @@ def GetBreweryBeerTable(links, numbeer):
     BeerName = []
     BeerType = []
     BeerABV = []
+    abvregex = re.compile(r"(\d)(\.)*(\d)*")
     DateAdded = []
     Links = []
     for i in range(0,LBeerList):
         BName = BeerList[i].find("a").text
-        TF = DeleteBeers.apply(lambda x: x == BName).sum(axis = 0)[0]
-        if TF == 1:
-            pass
+        if not DeleteBeers.empty:
+            TF = DeleteBeers.apply(lambda x: x == BName).sum(axis = 0)[0]
+            if TF == 1:
+                pass
+            else:
+                BeerName.append(BeerList[i].find("a").text)
+                BeerType.append(BeerList[i].find("span").text)
+                if abvregex.search(BeerList[i].find("div").text) is None:
+                    abv = "N/A"
+                else:
+                    abv = abvregex.search(BeerList[i].find("div").text).group()
+                BeerABV.append(abv)
+                DateAdded.append(DateAdd[i].text)
+                Links.append("https://www.ratebeer.com"+BeerList[i].find("a")["href"])
         else:
             BeerName.append(BeerList[i].find("a").text)
             BeerType.append(BeerList[i].find("span").text)
