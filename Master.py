@@ -11,7 +11,7 @@ links = GetLinks("I can put anything here")
 
 #Get brewery-level data from state/city
 data = []
-for j in range(0,1,1): #For now only grab from one state
+for j in range(0,len(links),1): 
     df = GetBreweryTable(links, j)
     data.append(df)
 
