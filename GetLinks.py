@@ -25,7 +25,7 @@ def GetLinks(state):
     soup = BeautifulSoup(page.text, "lxml")
 
     #Define regular expression to find links of interest
-    link_regex = re.compile(r"(/breweries/)([\D|]+)(/)([0-9]){1,2}(/213/)")
+    link_regex = re.compile(r"(/breweries/)([\D]+)(/)([0-9]){1,2}(/213/)")
 
     #Search html data for all links
     links = soup.find_all("a", href = True)
